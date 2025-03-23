@@ -2,7 +2,7 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
+
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -69,14 +69,44 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
-	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+    pub fn insert(&mut self, node: Option<NonNull<Node<T>>>) {
+        match self.end {
+            None => self.start = node,
+            Some(end_ptr) => unsafe {
+                    (*end_ptr.as_ptr()).next = node;
+                },
         }
+        self.end = node;
+        self.length += 1;
+    }
+	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+    where
+        T: PartialOrd,
+	{   
+        let mut res: LinkedList<T> = LinkedList::new();
+		let mut p1 = list_a.start;
+        let mut p2 = list_b.start;
+        
+        while p1.is_some() || p2.is_some() {
+            if p1.is_none() {
+                res.insert(p2);
+                unsafe { p2 = (*p2.unwrap().as_ptr()).next; }
+            } else if p2.is_none() {
+                res.insert(p1);
+                unsafe { p1 = (*p1.unwrap().as_ptr()).next; }
+            } else {
+                unsafe {
+                    if (*(p1.unwrap().as_ptr())).val < (*(p2.unwrap().as_ptr())).val {
+                        res.insert(p1);
+                        p1 = (*p1.unwrap().as_ptr()).next;
+                    } else {
+                        res.insert(p2);
+                        p2 = (*p2.unwrap().as_ptr()).next;
+                    }
+                }
+            }
+        }
+        res
 	}
 }
 

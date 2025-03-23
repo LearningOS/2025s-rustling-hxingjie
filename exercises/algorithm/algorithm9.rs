@@ -2,7 +2,7 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -13,6 +13,7 @@ where
 {
     count: usize,
     items: Vec<T>,
+    // (self.comparator)(&lhs, &rhs) is true, lhs should be up,
     comparator: fn(&T, &T) -> bool,
 }
 
@@ -37,7 +38,47 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count += 1;
+        let mut i = self.count;
+        let mut parent_i = self.parent_idx(i);
+        while i >= 2 && (self.comparator)(&self.items[i], &self.items[parent_i]) {
+            self.items.swap(i, parent_i);
+
+            i = parent_i;
+            parent_i = self.parent_idx(i);
+        }
+    }
+
+    pub fn down(&mut self) {
+        if self.is_empty() { // 如果heap为空, 不需要使堆顶尝试下沉
+            return;
+        }
+
+        let mut i = 1; // 当前尝试下沉的元素下标
+        loop {
+            if self.children_present(i) { // children present
+                let i_left = self.left_child_idx(i);
+                let mut i_swap = i_left; // 待比较的下标
+                let mut val = &self.items[i_left]; // 待比较的值
+
+                if i_left + 1 <= self.count { // 右孩子存在
+                    if (self.comparator)(&self.items[i_left+1], &val) { // 比较左右孩子
+                        i_swap = i_left + 1;
+                        val = &self.items[i_left+1];
+                    }
+                }
+                
+                if (self.comparator)(&val, &self.items[i]) {
+                    self.items.swap(i_swap, i);
+                    i = i_swap;
+                } else {
+                    break;
+                }
+            } else { // children not present, 不再需要尝试下沉
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +98,11 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        if self.children_present(idx) {
+            self.left_child_idx(idx)
+        } else {
+            0
+        }
     }
 }
 
@@ -84,8 +128,14 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            None
+        } else {
+            let item = self.items.swap_remove(1);
+            self.count -= 1;
+            self.down();
+            Some(item)
+        }
     }
 }
 
